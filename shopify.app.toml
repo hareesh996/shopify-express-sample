@@ -1,9 +1,9 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "e6ddccc1092262c6f9b3c1f08077508c"
+client_id = "140b7d4d54d1e43d0b1a751f5cc1e9fd"
 name = "testing-express-app"
-handle = "testing-express-app-3"
-application_url = "https://solved-chi-focused-wrong.trycloudflare.com"
+handle = "testing-express-app-4"
+application_url = "https://deposit-northwest-participating-important.trycloudflare.com"
 embedded = true
 
 [build]
@@ -13,12 +13,21 @@ automatically_update_urls_on_dev = true
 [webhooks]
 api_version = "2025-07"
 
+[[webhooks.subscriptions]]
+topics=["orders/create"]
+uri="/webhooks/apps/orders/create"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "read_customers,write_products, write_discounts,read_orders"
 
 [auth]
-redirect_urls = ["https://solved-chi-focused-wrong.trycloudflare.com/auth/callback", "https://solved-chi-focused-wrong.trycloudflare.com/auth/shopify/callback", "https://solved-chi-focused-wrong.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://deposit-northwest-participating-important.trycloudflare.com/auth/callback", "https://deposit-northwest-participating-important.trycloudflare.com/auth/shopify/callback", "https://deposit-northwest-participating-important.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
+
+[app_proxy]
+url = "https://deposit-northwest-participating-important.trycloudflare.com:3400/custom-apis"
+subpath = "custom-apis"
+prefix = "apps"

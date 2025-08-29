@@ -9,14 +9,18 @@
     "dev": "shopify app dev",
     "info": "shopify app info",
     "generate": "shopify app generate",
-    "deploy": "shopify app deploy"
+    "deploy": "shopify app deploy",
+    "theme-extension-support": "node web/theme-extension-support.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^1.11.0"
+  },
   "author": "john-dutton",
   "private": true,
   "workspaces": [
     "extensions/*",
     "web",
-    "web/frontend"
+    "web/frontend",
+    "widgets/*"
   ]
 }

@@ -1,3 +1,5 @@
+import "./loadEnv.js";
+
 // @ts-check
 import { join } from "path";
 import { readFileSync } from "fs";
@@ -7,6 +9,8 @@ import serveStatic from "serve-static";
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
 import PrivacyWebhookHandlers from "./privacy.js";
+import { getShopInformation, validateAppProxyHmac } from "./delegateToken.js";
+import { DeliveryMethod } from "@shopify/shopify-api";
 
 const PORT = parseInt(
   process.env.BACKEND_PORT || process.env.PORT || "3000",
@@ -27,9 +31,33 @@ app.get(
   shopify.auth.callback(),
   shopify.redirectToShopifyOrAppRoot()
 );
+
+const webhookHandlers = {
+  ...PrivacyWebhookHandlers,
+  ORDERS_CREATE: {
+    deliveryMethod: DeliveryMethod.Http,
+    callbackUrl: "/api/webhooks",
+    callback: async (topic, shop, body, webhookId) => {
+      console.log(`Received webhook for ${topic} from shop ${shop}`);
+      // Handle the order creation logic here
+      // For example, you could log the order details or process them further
+      console.log("Order details:", body);
+    },
+  },
+  CARTS_UPDATE: {
+    deliveryMethod: DeliveryMethod.Http,
+    callbackUrl: "/api/webhooks",
+    callback: async (topic, shop, body, webhookId) => {
+      console.log(`Received webhook for ${topic} from shop ${shop}`);
+      // Handle the cart update logic here
+      console.log("Cart update details:", body);
+    },
+  },
+};
+
 app.post(
   shopify.config.webhooks.path,
-  shopify.processWebhooks({ webhookHandlers: PrivacyWebhookHandlers })
+  shopify.processWebhooks({ webhookHandlers })
 );
 
 // If you are adding routes outside of the /api path, remember to
@@ -70,14 +98,37 @@ app.post("/api/products", async (_req, res) => {
 });
 
 app.get("/api/user", async (_req, res) => {
-  const session = res.locals.shopify.session; 
+  const session = res.locals.shopify.session;
   if (!session) {
     return res.status(401).send({ error: "Unauthorized" });
   }
   res.status(200).send({
-    name: session.shop
+    name: session.shop,
   });
+});
 
+const verifyShopifyRequest = async (req, res, next) => {
+  const isValid = await validateAppProxyHmac(req.url);
+  if (!isValid) {
+    return res.status(401).send({ error: "Unauthorized" });
+  }
+  next();
+};
+
+app.get("/custom-apis/test", async (req, res) => {
+  const isValid = await validateAppProxyHmac(req.query);
+  if (!isValid) {
+    return res.status(401).send({ error: "Unauthorized" });
+  }
+  const shopInformation = await getShopInformation([
+    "read_products",
+    "write_products",
+  ]);
+  if (shopInformation) {
+    res.status(200).json(shopInformation);
+  } else {
+    res.status(500).json({ error: "Failed to create delegate access token" });
+  }
 });
 
 app.use(shopify.cspHeaders());
@@ -100,4 +151,6 @@ app.use("/*", shopify.ensureInstalledOnShop(), async (_req, res, _next) => {
     );
 });
 
-app.listen(PORT);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

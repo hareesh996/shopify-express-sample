@@ -1,0 +1,38 @@
+query CartInput {
+  cart {
+    buyerIdentity {
+      email
+      isAuthenticated
+    }
+    lines {
+      id
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      quantity
+      merchandise{
+        ... on ProductVariant {
+          id
+          title
+          product {
+            id
+            title
+            productType
+            inAnyCollection
+          }
+        }
+      }
+    }
+  }
+  discount {
+    discountClasses
+    metafield(key: "function-configuration", namespace: "default") {
+      value
+      jsonValue
+      type
+    }
+  }
+  triggeringDiscountCode
+}
